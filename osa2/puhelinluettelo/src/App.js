@@ -44,7 +44,33 @@ const App = () => {
             }, 3000)
           })
           .catch(error => {
-            setMessage(`Information of ${newName} has already been removed from the server`)
+            setMessage(`Error: can't update ${newName}. Phone number must contain at least 8 digits separated with a "-" after the first 2 or 3 digits`)
+            setMessageType('error')
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
+          })
+      }
+    } else if (persons.find(({number}) => number === newNumber) !== undefined) {
+      const person = persons.find(p => p.number === newNumber)
+      const oldName = person.name
+      if(window.confirm(`Number ${newNumber} is already added to phonebook with name ${oldName}, change contact name to ${newName}?`)) {
+        const id = person.id
+        const personObject = {...person, name: newName}
+        personService
+          .update(id, personObject)
+          .then(returnedPerson => {
+            setPersons(persons.map(person => person.id !== id 
+              ? person 
+              : returnedPerson))
+            setMessage(`Replaced ${oldName} with ${newName}`)
+            setMessageType('normal')
+            setTimeout(() => {
+              setMessage(null)
+            }, 3000)
+          })
+          .catch(error => {
+            setMessage(`Error: can't update ${newName}. Phone number must contain at least 8 digits separated with a "-" after the first 2 or 3 digits`)
             setMessageType('error')
             setTimeout(() => {
               setMessage(null)
@@ -52,7 +78,7 @@ const App = () => {
           })
       }
     }
-    else if (newName !== '' && newNumber !== '') {
+    else if (newName !== '' || newNumber !== '') {
       const personObject = {
         name: newName,
         number: newNumber
@@ -68,11 +94,11 @@ const App = () => {
           }, 3000)
         })
         .catch(error => {
-          setMessage(`Failed to add ${newName}`)
+          setMessage(error.response.data.error)
           setMessageType('error')
           setTimeout(() => {
             setMessage(null)
-          }, 3000)
+          }, 5000)
         })
     }
     setNewName('')
@@ -128,15 +154,15 @@ const App = () => {
   }
 
   const personsToShow = showAll 
-    ? persons 
-    : persons.filter(person => person.name.toLowerCase().includes(filter.toLowerCase()))
+    ? persons.sort((a, b) => a.name.localeCompare(b.name)) 
+    : persons.filter(person => person.name.toLowerCase().includes(filter.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div>
       <h2>Phonebook</h2>
       <Notification message={message} type={messageType}/>
       <Filter filter={filter} handleFilterChange={handleFilterChange}/>
-      <h3>add a new contact</h3>
+      <h3>Add a new contact</h3>
       <PersonForm addName={addName} newName={newName} handleNameChange={handleNameChange} 
         newNumber={newNumber} handleNumberChange={handleNumberChange}/>
       <h3>Numbers</h3>
