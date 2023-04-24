@@ -17,4 +17,29 @@ blogsRouter.post('/', (request, response, next) => {
     .catch(error => next(error))
 })
 
+blogsRouter.get('/:id', (request, response, next) => {
+  Blog.findById(request.params.id)
+    .then(blog => {
+      if(blog) {
+        response.json(blog)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
+})
+
+blogsRouter.delete('/:id', (request, response, next) => {
+  Blog.findByIdAndRemove(request.params.id)
+    .then(response.status(204).end())
+    .catch(error => next(error))
+})
+
+blogsRouter.put('/:id', (request, response, next) => {
+  const updatedInfo = request.body
+  Blog.findByIdAndUpdate(request.params.id, updatedInfo, { new: true })
+    .then(updatedBlog => response.json(updatedBlog))
+    .catch(error => next(error))
+})
+
 module.exports = blogsRouter
